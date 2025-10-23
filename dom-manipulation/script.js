@@ -301,6 +301,69 @@ document.addEventListener("DOMContentLoaded", () => {
   filterQuotes(); // Show filtered or all quotes
 });
 
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+    const serverQuotes = await response.json();
+
+    // Convert server posts into your quote format
+    const formatted = serverQuotes.slice(0, 5).map(post => ({
+      text: post.title,
+      category: "Server"
+    }));
+
+    console.log("Fetched quotes from server:", formatted);
+    return formatted;
+  } catch (error) {
+    console.error("Error fetching server data:", error);
+    return [];
+  }
+}
+
+async function syncQuotes() {
+  const serverQuotes = await fetchQuotesFromServer();
+
+  // Load local quotes
+  const localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
+
+  // Combine them (server quotes first)
+  const mergedQuotes = [...serverQuotes, ...localQuotes];
+
+  // Save merged version
+  localStorage.setItem("quotes", JSON.stringify(mergedQuotes));
+
+  quotes = mergedQuotes; // Update the app's in-memory quotes
+  populateCategories(); // Refresh dropdown
+  filterQuotes(); // Refresh display
+}
+
+setInterval(syncQuotes, 10000); // Sync every 10 seconds
+
+async function syncQuotes() {
+  const serverQuotes = await fetchQuotesFromServer();
+  const localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
+
+  // Simple conflict resolution: server takes priority
+  const mergedQuotes = [...serverQuotes, ...localQuotes.filter(
+    lq => !serverQuotes.some(sq => sq.text === lq.text)
+  )];
+
+  localStorage.setItem("quotes", JSON.stringify(mergedQuotes));
+  quotes = mergedQuotes;
+  populateCategories();
+  filterQuotes();
+
+  // Notify user
+  const message = document.createElement("div");
+  message.textContent = "Quotes synced with server.";
+  message.style.background = "#e0ffe0";
+  message.style.padding = "10px";
+  message.style.margin = "10px 0";
+  document.body.prepend(message);
+
+  setTimeout(() => message.remove(), 3000);
+}
+
 async function sendQuoteToServer(quote) {
   try {
     const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
@@ -339,7 +402,5 @@ function addQuote() {
     alert("Please enter both quote and category!");
   }
 }
-
-
 
 
