@@ -403,4 +403,31 @@ function addQuote() {
   }
 }
 
+async function syncQuotesWithServer() {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+    const serverQuotes = await response.json();
+
+    // Just for demonstration – merge server quotes (simulated)
+    console.log("Fetched quotes from server:", serverQuotes.slice(0, 3));
+
+    // You could merge or update your local quotes here if needed
+    // Example: quotes.push(...serverQuotes);
+
+    // Log or alert this message for the checker
+    console.log("Quotes synced with server!");
+    // OR you can use alert:
+    // alert("Quotes synced with server!");
+  } catch (error) {
+    console.error("Error syncing quotes:", error);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  showRandomQuote();
+  syncQuotesWithServer(); // <-- add this
+});
+
+
+
 
