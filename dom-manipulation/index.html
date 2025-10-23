@@ -26,6 +26,14 @@
 <input type="file" id="importFile" accept=".json">
 <button id="clearStorage">Clear Stored Quotes</button>
 
+<select id="categoryFilter" onchange="filterQuotes()">
+  <option value="all">All Categories</option>
+  <!-- Categories will be added here by JS -->
+</select>
+
+<div id="quoteDisplay"></div>
+
+
   <script src="script.js"></script>
 </body>
 </html>
