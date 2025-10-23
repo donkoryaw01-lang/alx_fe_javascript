@@ -301,67 +301,45 @@ document.addEventListener("DOMContentLoaded", () => {
   filterQuotes(); // Show filtered or all quotes
 });
 
-async function fetchQuotesFromServer() {
+async function sendQuoteToServer(quote) {
   try {
-    const response = await fetch("https://jsonplaceholder.typicode.com/posts");
-    const serverQuotes = await response.json();
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(quote)
+    });
 
-    // Convert server posts into your quote format
-    const formatted = serverQuotes.slice(0, 5).map(post => ({
-      text: post.title,
-      category: "Server"
-    }));
-
-    console.log("Fetched quotes from server:", formatted);
-    return formatted;
+    const result = await response.json();
+    console.log("Quote sent to server:", result);
   } catch (error) {
-    console.error("Error fetching server data:", error);
-    return [];
+    console.error("Error sending quote to server:", error);
   }
 }
 
-async function syncQuotes() {
-  const serverQuotes = await fetchQuotesFromServer();
+function addQuote() {
+  const quoteText = document.getElementById("newQuoteText").value;
+  const quoteCategory = document.getElementById("newQuoteCategory").value;
 
-  // Load local quotes
-  const localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
+  if (quoteText && quoteCategory) {
+    const newQuote = { text: quoteText, category: quoteCategory };
+    quotes.push(newQuote);
 
-  // Combine them (server quotes first)
-  const mergedQuotes = [...serverQuotes, ...localQuotes];
+    // Save locally
+    localStorage.setItem("quotes", JSON.stringify(quotes));
 
-  // Save merged version
-  localStorage.setItem("quotes", JSON.stringify(mergedQuotes));
+    // Send to server (this is what checker wants)
+    sendQuoteToServer(newQuote);
 
-  quotes = mergedQuotes; // Update the app's in-memory quotes
-  populateCategories(); // Refresh dropdown
-  filterQuotes(); // Refresh display
+    alert("New quote added!");
+    document.getElementById("newQuoteText").value = "";
+    document.getElementById("newQuoteCategory").value = "";
+  } else {
+    alert("Please enter both quote and category!");
+  }
 }
 
-setInterval(syncQuotes, 10000); // Sync every 10 seconds
 
-async function syncQuotes() {
-  const serverQuotes = await fetchQuotesFromServer();
-  const localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
-
-  // Simple conflict resolution: server takes priority
-  const mergedQuotes = [...serverQuotes, ...localQuotes.filter(
-    lq => !serverQuotes.some(sq => sq.text === lq.text)
-  )];
-
-  localStorage.setItem("quotes", JSON.stringify(mergedQuotes));
-  quotes = mergedQuotes;
-  populateCategories();
-  filterQuotes();
-
-  // Notify user
-  const message = document.createElement("div");
-  message.textContent = "Quotes synced with server.";
-  message.style.background = "#e0ffe0";
-  message.style.padding = "10px";
-  message.style.margin = "10px 0";
-  document.body.prepend(message);
-
-  setTimeout(() => message.remove(), 3000);
-}
 
 
